@@ -25,28 +25,35 @@ import java.util.Iterator;
 public class Welcome extends AppCompatActivity implements View.OnClickListener{
     Button btnStart;
     EditText etName;
-
+    DataLink dl = new DataLink();
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.welcome);
-        //setContentView(R.layout.activity_main);
+
         btnStart = (Button) findViewById(R.id.btnStart);
         btnStart.setOnClickListener(this);
-
         etName = (EditText) findViewById(R.id.etName);
+
+
     }
 
     @Override
     public void onClick(View v) {
         Intent myIntent = new Intent(v.getContext(), MainActivity.class);
-        Bundle extras = new Bundle();//create bundle
-        String myfile = new String();
-        myfile = "udwords.txt";
+        String myfile = "udwords.txt";
+        HashMap<String, String> fileData = dl.loadCSVData(myfile, getApplicationContext());
+        if (fileData != null) {
+            Toast myToast = Toast.makeText(getApplicationContext(), "successfully loaded data", Toast.LENGTH_LONG);
+            myToast.show();
+        }
+        else {
+            Toast myToast = Toast.makeText(getApplicationContext(), "unable to load data", Toast.LENGTH_LONG);
+            myToast.show();
+        }
 
-        extras.putString("Name",etName.getText().toString());//fill bundle
-        extras.putString("File", myfile);
-        myIntent.putExtras(extras);//put bundle in intent
-        startActivityForResult(myIntent, 0);
+        myIntent.putExtra("fileData", fileData);
+        myIntent.putExtra("Name",etName.getText());//put bundle in intent
+        startActivityForResult(myIntent, 0); //expecting result back from activity
     }
 }
