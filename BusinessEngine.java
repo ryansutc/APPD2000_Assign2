@@ -2,84 +2,81 @@ package com.example.w0143446.quizbuilder;
 
 import android.content.Context;
 import android.content.res.AssetManager;
+import android.os.Parcel;
+import android.os.Parcelable;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Random;
 
 /**
- * Created by w0143446 on 10/19/2016.
+ BusinessEngine Class handles data processing
+ and analysis
+ Created by w0143446 on 10/19/2016.
  */
 public class BusinessEngine {
+    private static BusinessEngine instance = null;
     private int score = 0; //your current cumulative score(0-100%)
-    protected int card = 1; //the current question/answer from list.
-    private HashMap<String, String> hmData; //the question/answer data from hashmap
-    private ArrayList<String> alQuestions; //array of questions
-    private ArrayList<String> alAnswers; //array of answers
-    protected int count; //get count of records
+    protected int card = 1; //the current question/answer from list (1-10).
+    private HashMap<String, String> hmData; //the question/answer data in a hashmap (key, val)
+    private ArrayList<String> alQuestions; //arrayList of questions
+    private ArrayList<String> alAnswers; //arrayList of answers
 
-    public void loadCSVDataToHash(String filename, Context appContext) {
-        AssetManager am = appContext.getAssets(); //now aware of your project folder config and gets assets within
-
-        //create an input stream reader
-        InputStream is = null;
-        try {
-            is = am.open(filename);
-            System.out.println("file in assets is open");
-
-        } catch(IOException e) {
-            System.out.println("error opening file");
-            return;
-        }
-
-        BufferedReader br = new BufferedReader(new InputStreamReader(is));
-        String s;
-        String mykey = new String();
-        String myval = new String();
-        HashMap<String, String> hmData = new HashMap<String, String>();
-
-        try  {
-            while ((s = br.readLine()) != null) {
-                mykey = s.substring(0,s.indexOf(','));
-                myval = s.substring(s.indexOf(',') + 1, s.length());
-                hmData.put(mykey,myval); //populate hashMap
-            }
-        }
-        catch(IOException e) {
-            System.out.println("error reading file with buffered reader");
-            return;
-        }
-
+    protected BusinessEngine(HashMap<String, String> hmData){
+        //false constructor, called internally only
         this.hmData = hmData;
+        this.setQuestionArray(hmData);
+        this.setAnswerArray(hmData);
+    }
+    public synchronized static BusinessEngine getInstance(HashMap<String, String> hmData) {
+        //defacto construction method (lazy loading)
+        if (instance == null) {
+            instance = new BusinessEngine(hmData);
+
+            //http://www.javaworld.com/article/2073352/core-java/simply-singleton.html
+        }
+        return instance;
     }
 
-    public void getQuestionArray(HashMap<String, String> hmData) {
+    //Getters and setters to create arraylists of q&a
+    private void setQuestionArray(HashMap<String, String> hmData) {
         /*
-        Get an array list of questions, terms based on the hashmap,
-        also allows you to provide the definition you DONT want.
-         */
+        Sets up the ArrayList of QUESTIONS property alQuestions
+        based on the hashmap created by the loadCSVData method.
+        This is a private method that is called automatically by
+        the loadCSVData function.
+
+        If the app was expanded to allow
+        users to do CRUD functions then this architecture may change.
+        */
 
         ArrayList alData = new ArrayList();
         Iterator it = hmData.entrySet().iterator();
 
         for (Map.Entry<String, String> entry : hmData.entrySet())
         {
-            //System.out.println(entry.getKey());
-            alData.add(entry.getKey()); //definitions are key
+            alData.add(entry.getKey()); //questions are key
         }
 
         this.alQuestions = alData;
     }
-    public void getAnswerArray(HashMap<String, String> hmData) {
-        /*
-        Get an array list of answers, definitions based on the hashmap,
-        also allows you to provide the definition you DONT want.
-         */
+    private void setAnswerArray(HashMap<String, String> hmData) {
+         /*
+        Sets up the ArrayList of ANSWERS property alAnswers
+        based on the hashmap created by the loadCSVData method.
+        This is a private method that is called automatically by
+        the loadCSVData function.
+
+        If the app was expanded to allow
+        users to do CRUD functions then this architecture may change.
+        */
 
         ArrayList alData = new ArrayList();
         Iterator it = hmData.entrySet().iterator();
@@ -87,22 +84,78 @@ public class BusinessEngine {
         for (Map.Entry<String, String> entry : hmData.entrySet())
         {
             //System.out.println(entry.getKey());
-            alData.add(entry.getKey()); //definitions are key
+            alData.add(entry.getValue()); //answers are val
         }
 
         this.alAnswers = alData;
     }
-
-    private int getQuestionCount(ArrayList<String> questionsArray) {
-        /*
-        Get count of questions in deck
-         */
-        System.out.println("the length of the array is " + questionsArray.size());
-
-        this.count = questionsArray.size();
-        return questionsArray.size();
+    public ArrayList<String> getQuestionArray(){
+        return this.alQuestions;
+    }
+    public ArrayList<String> getAnswerArray(){
+        return this.alAnswers;
     }
 
+    protected String getCountText(Context appContext) {
+        /*
+            Returns the card count and
+            formats the resulting count
+            as text ([int] out of [int])
+        */
+        return this.card + " " + appContext.getString(R.string.tvQCount_text) + " " + alQuestions.size();
+    }
+    public ArrayList<String> getFourAnswers() {
+        /*
+        This is the method to return an ArrayList of
+        four answers: three correct, one wrong.
+        They are shuffled and returned in a
+        random order.
+        Result is a string array length 4
+         */
+
+        String rightAnswer = getRightAnswer();
+        String[] wrongAnswers = new String[3];
+        wrongAnswers = getThreeWrongAnswers(rightAnswer);
+        ArrayList<String> fourAnswersList = new ArrayList<>();
+        fourAnswersList.add(rightAnswer);
+        for (int x=0;x<3;x++) {
+            fourAnswersList.add(wrongAnswers[x]);
+            System.out.println(fourAnswersList.get(x));
+        }
+        Collections.shuffle(fourAnswersList);
+        return fourAnswersList;
+    }
+    protected String getRightAnswer() {
+        return this.alAnswers.get(card);
+    }
+    private String[] getThreeWrongAnswers(String correctAnswer) {
+        /*
+        Returns an array of 3 random wrong answers
+         */
+        String[] threeWrongAnswersArray =  new String[3];
+        Random rand = new Random();
+
+        for (int i=0;i<3;i++){
+            String wrongAnswer = this.alAnswers.get(rand.nextInt(9));
+            while (wrongAnswer.equals(correctAnswer)) {
+                //repeat if the answer is same as correct
+                wrongAnswer = this.alAnswers.get(rand.nextInt(9));
+            }
+
+            threeWrongAnswersArray[i] = wrongAnswer;
+        }
+        return threeWrongAnswersArray;
+    }
+
+    protected String updateResult(String checkedAnswer, Context appContext) {
+        if (getRightAnswer().equals(checkedAnswer)) {
+            score += 1;
+            return appContext.getString(R.string.txtFeedbackGood);
+        }
+        else {
+            return appContext.getString(R.string.txtFeedbackBad);
+        }
+    }
     //Getters, setters
     public int getScore() {
         return this.score;
@@ -116,13 +169,14 @@ public class BusinessEngine {
         the question is taken from the next index of the
         array, while the answer is taken from the hashmap.
          */
-
+        System.out.println(this.alQuestions.get(mynum));
+        System.out.println(this.hmData.get(this.alQuestions.get(mynum)));
         String[] card = {this.alQuestions.get(mynum), this.hmData.get(this.alQuestions.get(mynum))};
         return card;
     }
     public void nextCard() {
         this.card += 1;
-        if (this.card > this.count) {
+        if (this.card > alQuestions.size()) {
             this.card = 1; //[todo: make this trigger a done screen]
         }
     }
