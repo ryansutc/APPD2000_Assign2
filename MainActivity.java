@@ -1,18 +1,14 @@
 package com.example.w0143446.quizbuilder;
 
-import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.res.AssetManager;
-import android.os.Environment;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.support.v7.widget.AppCompatRadioButton;
-import android.util.Log;
 import android.view.View;
 import android.widget.*;
 
 
-import java.io.*;
 import java.util.*;
 
 
@@ -27,8 +23,11 @@ public class MainActivity extends AppCompatActivity {
     RadioButton rdoOptionD;
     RadioGroup rgOptions;
     Button btnNext;
-
+    String name;
     BusinessEngine be = null;
+    boolean go; //global variable. do you want to proceed response.
+    AlertDialog.Builder builder; //dialog builder
+    DialogInterface.OnClickListener dialogClickListener;
 
     //https://github.com/ryansutc/APPD2000_Assign2
     @Override
@@ -49,9 +48,11 @@ public class MainActivity extends AppCompatActivity {
         btnNext = (Button) findViewById(R.id.btnNext);
 
         Intent myintent = getIntent();
-        String name = myintent.getStringExtra("Name");
         HashMap<String, String> hmData = (HashMap<String, String>) myintent.getSerializableExtra("fileData"); //test
+        name = myintent.getStringExtra("Name");
         be = BusinessEngine.getInstance(hmData);
+
+        builder = new AlertDialog.Builder(MainActivity.this);
         //create map object
 
         updateQuestion();
@@ -59,26 +60,76 @@ public class MainActivity extends AppCompatActivity {
         rgOptions.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(RadioGroup group, int checkedId) {
-                RadioButton checkedRadioButton = (RadioButton) group.findViewById(checkedId);
-                // This puts the value (true/false) into the variable
-                String checkedAnswer = checkedRadioButton.getText().toString();
-                tvFeedback.setText(be.updateResult(checkedAnswer, getApplicationContext()));
-
-                enableRadioButtons(false);
-                showRadioButtons(true);
+                if (rgOptions.getCheckedRadioButtonId() > 0) {
+                    RadioButton checkedRadioButton = (RadioButton) group.findViewById(checkedId);
+                    // This puts the value (true/false) into the variable
+                    String checkedAnswer = checkedRadioButton.getText().toString();
+                    tvFeedback.setText(be.updateResult(checkedAnswer, getApplicationContext()));
+                    enableRadioButtons(false);
+                    showRadioButtons(true);
+                }
             }
         });
+
+        dialogClickListener = new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                switch (which) {
+                    case DialogInterface.BUTTON_POSITIVE:
+                        //Yes button clicked
+                        nextPage();
+                        //call Next Page
+                        break;
+
+                    case DialogInterface.BUTTON_NEGATIVE:
+                        //No button clicked
+                        go = false;
+                        break;
+                }
+            }
+        };//end dialogClickListener
 
         btnNext.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                be.nextCard();
-                updateQuestion();
-                enableRadioButtons(true);
+
+                System.out.println(rgOptions.getCheckedRadioButtonId());
+                if (rgOptions.getCheckedRadioButtonId() < 0) {
+                    builder.setMessage("You haven't answered question. Are you sure you want to skip?")
+                            .setPositiveButton("Yes", dialogClickListener)
+                            .setNegativeButton("No", dialogClickListener)
+                            .show();//handle the person clicking no to the proceed dialog.
+                }
+                else {
+                    nextPage();
+                }
             }
         }); //rgOptions check listener end
+
     }// end onCreate
 
+    private void nextPage() {
+        /* Private Function to update elements
+        and card values for next page
+         */
+        enableRadioButtons(true);
+        if (rgOptions.getCheckedRadioButtonId() > 0) {
+            rgOptions.clearCheck();
+        }
+        if (be.nextCard() != -1) {
+            updateQuestion();
+            enableRadioButtons(true);
+        } else {
+            //go to result activity
+            Intent myIntent = new Intent(MainActivity.this, Result.class);
+
+            String myScore = be.getScore() + " out of " + be.getQuestionArray().size();
+            myIntent.putExtra("ScoreText", myScore);
+            myIntent.putExtra("Result", be.getMotivationMsg(name));
+
+            startActivity(myIntent); //no result expected back
+        }
+    }
     private void enableRadioButtons(boolean enabled) {
         for(int i = 0; i < rgOptions.getChildCount(); i++){
             ((RadioButton)rgOptions.getChildAt(i)).setEnabled(enabled);
@@ -111,14 +162,13 @@ public class MainActivity extends AppCompatActivity {
         rdoOptionB.setText(fourAnswers.get(1));
         rdoOptionC.setText(fourAnswers.get(2));
         rdoOptionD.setText(fourAnswers.get(3));
-
     }
 
     public void getAnswer(String checkedAnswer) {
         /* Updates UI to respond to a selected
         RadioButton
          */
-        if (checkedAnswer == be.getRightAnswer()) {
+        if (checkedAnswer.equals(be.getRightAnswer())) {
             tvFeedback.setText(R.string.txtFeedbackGood);
         }
         else {
