@@ -9,7 +9,9 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -120,7 +122,7 @@ public class BusinessEngine {
         fourAnswersList.add(rightAnswer);
         for (int x=0;x<3;x++) {
             fourAnswersList.add(wrongAnswers[x]);
-            System.out.println(fourAnswersList.get(x));
+            //System.out.println(fourAnswersList.get(x));
         }
         Collections.shuffle(fourAnswersList);
         return fourAnswersList;
@@ -131,13 +133,18 @@ public class BusinessEngine {
     private String[] getThreeWrongAnswers(String correctAnswer) {
         /*
         Returns an array of 3 random wrong answers
+        Process does involve some while loops to keep
+        trying until a unique value found but I figure that
+        this is easier [better?] than creating another special
+        list
          */
         String[] threeWrongAnswersArray =  new String[3];
         Random rand = new Random();
 
         for (int i=0;i<3;i++){
             String wrongAnswer = this.alAnswers.get(rand.nextInt(9));
-            while (wrongAnswer.equals(correctAnswer)) {
+            while (wrongAnswer.equals(correctAnswer) ||
+                    Arrays.asList(threeWrongAnswersArray).contains(wrongAnswer)) {
                 //repeat if the answer is same as correct
                 wrongAnswer = this.alAnswers.get(rand.nextInt(9));
             }
@@ -145,6 +152,25 @@ public class BusinessEngine {
             threeWrongAnswersArray[i] = wrongAnswer;
         }
         return threeWrongAnswersArray;
+    }
+    public String getMotivationMsg(String name) {
+        double total = (float) score / alQuestions.size();
+        Integer result = (int)Math.round(total * 100);
+        if (result < 50) {
+            return result + "%, Better luck next time " + name;
+        }
+        else if (result < 70) {
+            return result + "%, Not bad. Keep working on it " + name;
+        }
+        else if (result < 90) {
+            return result + "%, Great Work.";
+        }
+        else if (result >= 90) {
+            return result + "%, Excellent Job. You're a quizmaster " + name;
+        }
+        else {
+            return "Something went wrong " + name;
+        }
     }
 
     protected String updateResult(String checkedAnswer, Context appContext) {
@@ -174,10 +200,11 @@ public class BusinessEngine {
         String[] card = {this.alQuestions.get(mynum), this.hmData.get(this.alQuestions.get(mynum))};
         return card;
     }
-    public void nextCard() {
+    public int nextCard() {
         this.card += 1;
-        if (this.card > alQuestions.size()) {
-            this.card = 1; //[todo: make this trigger a done screen]
+        if (this.card >= alQuestions.size()) {
+            this.card = -1; //[todo: make this trigger a done screen]
         }
+        return this.card;
     }
 }
