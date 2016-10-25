@@ -35,7 +35,6 @@ public class Welcome extends AppCompatActivity implements View.OnClickListener{
         btnStart.setOnClickListener(this);
         etName = (EditText) findViewById(R.id.etName);
 
-
     }
 
     @Override
@@ -53,7 +52,7 @@ public class Welcome extends AppCompatActivity implements View.OnClickListener{
         }
 
         myIntent.putExtra("fileData", fileData);
-        myIntent.putExtra("Name",etName.getText());//put bundle in intent
-        startActivityForResult(myIntent, 0); //expecting result back from activity
+        myIntent.putExtra("Name",etName.getText().toString());//put bundle in intent
+        startActivity(myIntent); //expecting result back from activity
     }
 }
