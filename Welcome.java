@@ -39,20 +39,26 @@ public class Welcome extends AppCompatActivity implements View.OnClickListener{
 
     @Override
     public void onClick(View v) {
-        Intent myIntent = new Intent(v.getContext(), MainActivity.class);
-        String myfile = "udwords.txt";
-        HashMap<String, String> fileData = dl.loadCSVData(myfile, getApplicationContext());
-        if (fileData != null) {
-            Toast myToast = Toast.makeText(getApplicationContext(), "successfully loaded data", Toast.LENGTH_LONG);
+        if (etName.getText().toString().equals("")) {
+            Toast myToast = Toast.makeText(getApplicationContext(), "Please Enter a Name", Toast.LENGTH_SHORT);
             myToast.show();
         }
         else {
-            Toast myToast = Toast.makeText(getApplicationContext(), "unable to load data", Toast.LENGTH_LONG);
-            myToast.show();
-        }
 
-        myIntent.putExtra("fileData", fileData);
-        myIntent.putExtra("Name",etName.getText().toString());//put bundle in intent
-        startActivity(myIntent); //expecting result back from activity
+
+            Intent myIntent = new Intent(v.getContext(), MainActivity.class);
+            String myfile = "udwords.txt";
+            HashMap<String, String> fileData = dl.loadCSVData(myfile, getApplicationContext());
+            if (fileData != null) {
+                Toast myToast = Toast.makeText(getApplicationContext(), "successfully loaded data", Toast.LENGTH_LONG);
+                myToast.show();
+            } else {
+                Toast myToast = Toast.makeText(getApplicationContext(), "unable to load data", Toast.LENGTH_LONG);
+                myToast.show();
+            }
+            myIntent.putExtra("fileData", fileData);
+            myIntent.putExtra("Name", etName.getText().toString());//put bundle in intent
+            startActivity(myIntent); //expecting result back from activity
+        }
     }
 }
