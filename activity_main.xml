@@ -35,9 +35,9 @@
         android:layout_height="wrap_content"
         android:layout_width="wrap_content"
         android:layout_gravity="bottom"
-        android:layout_alignParentStart="true"
+        android:src="@mipmap/ic_launcher"
         android:layout_below="@+id/tvQCount"
-        android:src="@mipmap/ic_launcher" />
+        android:layout_alignParentStart="true" />
 
     <TextView
         android:id="@+id/tvTerm"
@@ -45,7 +45,7 @@
         android:layout_height="wrap_content"
         android:gravity="top"
         android:text="@string/txtTerm"
-        android:layout_alignBottom="@+id/imageView"
+        android:layout_alignTop="@+id/imageView"
         android:layout_toEndOf="@+id/imageView" />
 
     <!--MIDDLE HEADER PART II!-->
@@ -62,8 +62,9 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/txtFeedbackGood"
-       android:layout_alignBottom="@+id/imageView2"
-       android:layout_toStartOf="@+id/tvScore" />
+       android:layout_below="@+id/imageView2"
+       android:layout_toStartOf="@+id/tvScore"
+       android:layout_marginTop="34dp" />
 
     <!--BOTTOM QUESTIONS !-->
     <RadioGroup
@@ -78,24 +79,28 @@
             android:id="@+id/rdoOptionA"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_margin="7dp"
             android:textAppearance="?android:attr/textAppearanceMedium" />
         <!--B!-->
         <RadioButton
             android:id="@+id/rdoOptionB"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_margin="7dp"
             android:textAppearance="?android:attr/textAppearanceMedium" />
         <!--C!-->
         <RadioButton
             android:id="@+id/rdoOptionC"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_margin="7dp"
             android:textAppearance="?android:attr/textAppearanceMedium" />
         <!--D!-->
         <RadioButton
             android:id="@+id/rdoOptionD"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_margin="7dp"
             android:textAppearance="?android:attr/textAppearanceMedium" />
     </RadioGroup>
 
