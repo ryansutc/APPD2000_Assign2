@@ -50,7 +50,8 @@ public class MainActivity extends AppCompatActivity {
         Intent myintent = getIntent();
         HashMap<String, String> hmData = (HashMap<String, String>) myintent.getSerializableExtra("fileData"); //test
         name = myintent.getStringExtra("Name");
-        be = BusinessEngine.getInstance(hmData);
+        //be = BusinessEngine.getInstance(hmData);
+        be = new BusinessEngine(hmData);
 
         builder = new AlertDialog.Builder(MainActivity.this);
         //create map object
@@ -125,8 +126,9 @@ public class MainActivity extends AppCompatActivity {
 
             String myScore = be.getScore() + " out of " + be.getQuestionArray().size();
             myIntent.putExtra("ScoreText", myScore);
+            myIntent.putExtra("fileData", be.getHashMap());
             myIntent.putExtra("Result", be.getMotivationMsg(name));
-
+            be.resetDeck();
             startActivity(myIntent); //no result expected back
         }
     }
